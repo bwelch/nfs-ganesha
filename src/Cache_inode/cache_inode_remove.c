@@ -149,7 +149,7 @@ cache_inode_status_t cache_inode_clean_internal(cache_entry_t * to_remove_entry,
 	 ((cache_entry_t *)old_value.pdata)->fh_desc.start != &to_remove_entry->handle)
         {
           LogCrit(COMPONENT_CACHE_INODE,
-                  "cache_inode_remove: unexpected pdata %p from hash table (pentry=%p)",
+                  "cache_inode_clean_internal: unexpected pdata %p from hash table (pentry=%p)",
                   old_value.pdata, to_remove_entry);
         }
     }
@@ -319,13 +319,13 @@ cache_inode_status_t cache_inode_remove_sw(cache_entry_t * pentry,             /
               cache_inode_status_t kill_status;
 
               LogDebug(COMPONENT_CACHE_INODE,
-                       "cache_inode_remove: Stale FSAL FH detected for pentry %p, fsal_status=(%u,%u)",
+                       "cache_inode_remove_sw: Stale FSAL FH detected for pentry %p, fsal_status=(%u,%u)",
                        pentry, fsal_status.major, fsal_status.minor);
 
               if(cache_inode_kill_entry(pentry, WT_LOCK, ht, pclient, &kill_status) !=
                  CACHE_INODE_SUCCESS)
                 LogCrit(COMPONENT_CACHE_INODE,
-                        "cache_inode_remove: Could not kill entry %p, status = %u",
+                        "cache_inode_remove_sw: Could not kill entry %p, status = %u",
                         pentry, kill_status);
 
               *pstatus = CACHE_INODE_FSAL_ESTALE;
@@ -460,7 +460,7 @@ cache_inode_status_t cache_inode_remove_sw(cache_entry_t * pentry,             /
       (pclient->stat.func_stats.nb_err_unrecover[CACHE_INODE_REMOVE])++;
 
   return status;
-}                               /* cache_inode_remove */
+}                               /* cache_inode_remove_sw */
 
 /**
  *
@@ -520,4 +520,4 @@ cache_inode_status_t cache_inode_remove(cache_entry_t * pentry,             /**<
 {
   return cache_inode_remove_sw(pentry,
                                pnode_name, pattr, ht, pclient, pcontext, pstatus, TRUE);
-}                               /* cache_inode_remove_no_mutex */
+}                               /* cache_inode_remove */

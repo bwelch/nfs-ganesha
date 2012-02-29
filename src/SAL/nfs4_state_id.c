@@ -80,7 +80,7 @@ int display_state_id_key(hash_buffer_t * pbuff, char *str)
   for(i = 0; i < OTHERSIZE; i++)
     len += sprintf(&(str[i * 2]), "%02x", (unsigned char)pbuff->pdata[i]);
   return len;
-}                               /* display_state_id_val */
+}                               /* display_state_id_key */
 
 int display_state_id_val(hash_buffer_t * pbuff, char *str)
 {
@@ -123,7 +123,7 @@ unsigned long state_id_value_hash_func(hash_parameter_t * p_hparam,
   for(i = 0; i < OTHERSIZE; i++)
     {
       c = ((char *)buffclef->pdata)[i];
-      sum += c;
+      sum += (sum<<3) + c;      /* Borrowed from tclHash.c HashStringKey */
     }
 
   if(isDebug(COMPONENT_HASHTABLE))
@@ -131,7 +131,7 @@ unsigned long state_id_value_hash_func(hash_parameter_t * p_hparam,
                  (unsigned long)(sum % p_hparam->index_size));
 
   return (unsigned long)(sum % p_hparam->index_size);
-}                               /*  client_id_reverse_value_hash_func */
+}                               /* state_id_value_hash_func */
 
 unsigned long state_id_rbt_hash_func(hash_parameter_t * p_hparam,
                                      hash_buffer_t * buffclef)
@@ -248,7 +248,7 @@ int nfs4_BuildStateId_Other(cache_entry_t     * pentry,
   open_owner_digest = popen_owner->so_owner.so_nfs4_owner.so_counter;
 
   LogFullDebug(COMPONENT_STATE,
-               "pentry=%p fileid=%"PRIu64" open_owner_digest=%u",
+               "pentry=%p fileid=%"PRIx64" open_owner_digest=%u",
                pentry, fileid_digest, open_owner_digest);
 
   /* Now, let's do the time's warp again.... Well, in fact we'll just build the stateid.other field */
@@ -278,11 +278,17 @@ int nfs4_State_Set(char other[OTHERSIZE], state_t * pstate_data)
   if((buffkey.pdata = (caddr_t) Mem_Alloc_Label(OTHERSIZE, "nfs4_State_Set")) == NULL)
     return 0;
 
-  LogFullDebug(COMPONENT_STATE,
-               "Allocating stateid key %p", buffkey.pdata);
-
   memcpy(buffkey.pdata, other, OTHERSIZE);
   buffkey.len = OTHERSIZE;
+
+  if (isFullDebug(COMPONENT_STATE))
+    {
+      char print_buf[128];
+      display_state_id_key(&buffkey, print_buf);
+      LogFullDebug(COMPONENT_STATE,
+                   "Allocating stateid key %p %s state entry %p", buffkey.pdata,
+                   print_buf, pstate_data->state_pentry);
+    }
 
   buffval.pdata = (caddr_t) pstate_data;
   buffval.len = sizeof(state_t);
@@ -332,6 +338,15 @@ int nfs4_State_Get_Pointer(char other[OTHERSIZE], state_t * *pstate_data)
     }
 
   *pstate_data = (state_t *) buffval.pdata;
+
+  if (isFullDebug(COMPONENT_STATE))
+    {
+      char print_buf[128];
+      display_state_id_key(&buffkey, print_buf);
+      LogFullDebug(COMPONENT_STATE,
+                   "Fetching stateid key %p %s state entry %p", buffkey.pdata,
+                   print_buf, (*pstate_data)->state_pentry);
+    }
 
   return 1;
 }                               /* nfs4_State_Get_Pointer */
@@ -513,7 +528,8 @@ int nfs4_Check_Stateid(stateid4        * pstate,
   if(pstate2->state_pentry != pentry)
     {
       LogDebug(COMPONENT_STATE,
-               "Check %s stateid found stateid %s has wrong file", tag, str);
+               "Check %s stateid found stateid %s has wrong file: pstate2->state_entry %p != %p",
+               tag, str, pstate2->state_pentry, pentry);
       return NFS4ERR_BAD_STATEID;
     }
 
@@ -543,8 +559,8 @@ int nfs4_Check_Stateid(stateid4        * pstate,
     }
 
   LogFullDebug(COMPONENT_STATE,
-               "Check %s stateid found valid stateid %s - %p",
-               tag, str, pstate2);
+               "Check %s stateid found valid stateid %s - %p -> %p",
+               tag, str, pstate2, pstate2->state_pentry);
 
   /* Copy stateid into current for later use */
   data->current_stateid       = *pstate;

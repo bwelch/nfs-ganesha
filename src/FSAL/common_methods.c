@@ -70,9 +70,6 @@ fsal_status_t COMMON_GetClientContext(fsal_op_context_t * p_thr_context,  /* IN/
 {
   fsal_count_t ng = nb_alt_groups;
   unsigned int i;
-#define PRINT_BUF_SIZE (FSAL_NGROUPS_MAX * 6 + 64)
-  int cursor;
-  char print_buf[PRINT_BUF_SIZE];
 
   /* sanity check */
   if(!p_thr_context || !p_export_context ||
@@ -93,6 +90,9 @@ fsal_status_t COMMON_GetClientContext(fsal_op_context_t * p_thr_context,  /* IN/
 
   if(isFullDebug(COMPONENT_FSAL))
     {
+#define PRINT_BUF_SIZE (FSAL_NGROUPS_MAX * 6 + 64)
+      int cursor;
+      char print_buf[PRINT_BUF_SIZE];
       /* traces: prints p_credential structure on one line */
 
       snprintf(print_buf, PRINT_BUF_SIZE, "creds: uid = %d gid = %d",

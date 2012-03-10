@@ -525,5 +525,5 @@ char * VFSFSAL_handle_sprintf(fsal_handle_t * handle, int len, char *buf)
           break;        /* Out of space */
         }
     }
-        
+  return buf;        
 }

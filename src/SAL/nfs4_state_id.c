@@ -80,7 +80,7 @@ int display_state_id_key(hash_buffer_t * pbuff, char *str)
   for(i = 0; i < OTHERSIZE; i++)
     len += sprintf(&(str[i * 2]), "%02x", (unsigned char)pbuff->pdata[i]);
   return len;
-}                               /* display_state_id_val */
+}                               /* display_state_id_key */
 
 int display_state_id_val(hash_buffer_t * pbuff, char *str)
 {
@@ -271,7 +271,6 @@ int nfs4_State_Set(char other[OTHERSIZE], state_t * pstate_data)
 {
   hash_buffer_t buffkey;
   hash_buffer_t buffval;
-  char print_buf[128];
 
   if((buffkey.pdata = (caddr_t) Mem_Alloc_Label(OTHERSIZE, "nfs4_State_Set")) == NULL)
     return 0;
@@ -279,10 +278,14 @@ int nfs4_State_Set(char other[OTHERSIZE], state_t * pstate_data)
   memcpy(buffkey.pdata, other, OTHERSIZE);
   buffkey.len = OTHERSIZE;
 
-  display_state_id_key(&buffkey, print_buf);
-  LogFullDebug(COMPONENT_STATE,
-               "Allocating stateid key %p %s state entry %p", buffkey.pdata, print_buf,
-               pstate_data->state_pentry);
+  if (isFullDebug(COMPONENT_STATE))
+    {
+      char print_buf[128];
+      display_state_id_key(&buffkey, print_buf);
+      LogFullDebug(COMPONENT_STATE,
+                   "Allocating stateid key %p %s state entry %p", buffkey.pdata,
+                   print_buf, pstate_data->state_pentry);
+    }
 
   buffval.pdata = (caddr_t) pstate_data;
   buffval.len = sizeof(state_t);
@@ -319,7 +322,6 @@ int nfs4_State_Get_Pointer(char other[OTHERSIZE], state_t * *pstate_data)
   hash_buffer_t buffkey;
   hash_buffer_t buffval;
   int           rc;
-  char print_buf[128];
 
   buffkey.pdata = (caddr_t) other;
   buffkey.len = OTHERSIZE;
@@ -334,10 +336,14 @@ int nfs4_State_Get_Pointer(char other[OTHERSIZE], state_t * *pstate_data)
 
   *pstate_data = (state_t *) buffval.pdata;
 
-  display_state_id_key(&buffkey, print_buf);
-  LogFullDebug(COMPONENT_STATE,
-               "Fetching stateid key %p %s state entry %p", buffkey.pdata, print_buf,
-               (*pstate_data)->state_pentry);
+  if (isFullDebug(COMPONENT_STATE))
+    {
+      char print_buf[128];
+      display_state_id_key(&buffkey, print_buf);
+      LogFullDebug(COMPONENT_STATE,
+                   "Fetching stateid key %p %s state entry %p", buffkey.pdata,
+                   print_buf, (*pstate_data)->state_pentry);
+    }
 
   return 1;
 }                               /* nfs4_State_Get_Pointer */
@@ -522,10 +528,6 @@ int nfs4_Check_Stateid(stateid4        * pstate,
                "Check %s stateid found stateid %s has wrong file: pstate2->state_entry %p != %p",
                tag, str, pstate2->state_pentry, pentry);
       return NFS4ERR_BAD_STATEID;
-    } else {
-      LogFullDebug(COMPONENT_STATE,
-               "Check %s stateid found stateid %s has right file: pstate2->state_entry %p",
-               tag, str, pstate2->state_pentry);
     }
 
   /* Whether stateid.seqid may be zero depends on the state type

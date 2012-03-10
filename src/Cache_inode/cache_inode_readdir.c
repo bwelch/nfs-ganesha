@@ -112,10 +112,6 @@ static cache_inode_status_t cache_inode_readdir_nonamecache( cache_entry_t * pen
       return *pstatus;
     }
 
-  LogFullDebug(COMPONENT_CACHE_INODE,
-               "About to readdir in  cache_inode_readdir_nonamecache: pentry=%p "
-	       "cookie=%"PRIu64, pentry_dir, cookie ) ;
-
   /* Open the directory */
   dir_attributes.asked_attributes = pclient->attrmask;
 #ifdef _USE_MFSL
@@ -136,13 +132,13 @@ static cache_inode_status_t cache_inode_readdir_nonamecache( cache_entry_t * pen
           cache_inode_status_t kill_status;
 
           LogEvent(COMPONENT_CACHE_INODE,
-                   "cache_inode_readdir_nocache: Stale FSAL File Handle detected for pentry = %p, fsal_status=(%u,%u)",
+                   "Stale FSAL File Handle detected for cache pentry = %p, fsal_status=(%u,%u)",
                    pentry_dir, fsal_status.major, fsal_status.minor);
 
           if(cache_inode_kill_entry(pentry_dir, WT_LOCK, ht, pclient, &kill_status) !=
              CACHE_INODE_SUCCESS)
             LogCrit(COMPONENT_CACHE_INODE,
-                    "cache_inode_readdir_nocache: Could not kill entry %p, status = %u",
+                    "Could not kill cache entry %p, status = %u",
                     pentry_dir, kill_status);
 
           *pstatus = CACHE_INODE_FSAL_ESTALE;
@@ -237,11 +233,6 @@ static cache_inode_status_t cache_inode_readdir_nonamecache( cache_entry_t * pen
   /* Do not forget to set returned end cookie */
   //memcpy( pend_cookie, &(end_cookie.data), sizeof( uint64_t ) ) ; 
   FSAL_SET_POFFSET_BY_COOKIE( end_cookie, pend_cookie ) ;
-
-  LogFullDebug(COMPONENT_CACHE_INODE,
-               "End of readdir in  cache_inode_readdir_nonamecache: pentry=%p "
-	       "cookie=%"PRIu64, pentry_dir, *pend_cookie ) ;
-
 
   /* Close the directory */
 #ifdef _USE_MFSL
@@ -846,9 +837,6 @@ cache_inode_status_t cache_inode_readdir_populate(
   /* If directory is already populated , there is no job to do */
   if(pentry_dir->object.dir.has_been_readdir == CACHE_INODE_YES)
     {
-      LogEvent(COMPONENT_CACHE_INODE,
-	   "cache_inode_readdir_populate: skipping populate because dir.has_been_readdir, pentry = %p",
-	   pentry_dir);
       *pstatus = CACHE_INODE_SUCCESS;
       return *pstatus;
     }
@@ -879,13 +867,13 @@ cache_inode_status_t cache_inode_readdir_populate(
           cache_inode_status_t kill_status;
 
           LogEvent(COMPONENT_CACHE_INODE,
-                   "cache_inode_readdir_populate: Stale FSAL File Handle detected for pentry = %p, fsal_status=(%u,%u)",
+                   "Stale FSAL File Handle detected for cache pentry = %p, fsal_status=(%u,%u)",
                    pentry_dir, fsal_status.major, fsal_status.minor);
 
           if(cache_inode_kill_entry(pentry_dir, WT_LOCK, ht, pclient, &kill_status) !=
              CACHE_INODE_SUCCESS)
             LogCrit(COMPONENT_CACHE_INODE,
-                    "cache_inode_readdir_populate: Could not kill entry %p, status = %u",
+                    "Could not kill cache entry %p, status = %u",
                     pentry_dir, kill_status);
 
           *pstatus = CACHE_INODE_FSAL_ESTALE;
@@ -925,7 +913,7 @@ cache_inode_status_t cache_inode_readdir_populate(
       for(iter = 0; iter < nbfound; iter++)
         {
           LogFullDebug(COMPONENT_CACHE_INODE,
-                       "cache readdir populate found entry %s",
+                       "found directory entry %s",
                        array_dirent[iter].name.name);
 
           /* It is not needed to cache '.' and '..' */
@@ -933,7 +921,7 @@ cache_inode_status_t cache_inode_readdir_populate(
              !FSAL_namecmp(&(array_dirent[iter].name), (fsal_name_t *) & FSAL_DOT_DOT))
             {
               LogFullDebug(COMPONENT_CACHE_INODE,
-                           "cache readdir populate : do not cache . and ..");
+                           "do not cache . and ..");
               continue;
             }
 
@@ -979,13 +967,13 @@ cache_inode_status_t cache_inode_readdir_populate(
                       cache_inode_status_t kill_status;
 
                       LogEvent(COMPONENT_CACHE_INODE,
-                               "cache_inode_readdir_populate: Stale FSAL File Handle detected for pentry = %p, fsal_status=(%u,%u)",
+                               "Stale FSAL File Handle detected for cache pentry = %p, fsal_status=(%u,%u)",
                                pentry_dir, fsal_status.major, fsal_status.minor );
 
                       if(cache_inode_kill_entry(pentry_dir, WT_LOCK, ht, pclient, &kill_status) !=
                          CACHE_INODE_SUCCESS)
                         LogCrit(COMPONENT_CACHE_INODE,
-                                "cache_inode_readdir_populate: Could not kill entry %p, status = %u",
+                                "Could not kill cache entry %p, status = %u",
                                 pentry_dir, kill_status);
 
                       *pstatus = CACHE_INODE_FSAL_ESTALE;
@@ -1208,7 +1196,7 @@ cache_inode_status_t cache_inode_readdir(cache_entry_t * dir_pentry,
 
   /* end cookie initial value is the begin cookie */
   LogFullDebug(COMPONENT_CACHE_INODE,
-               "--> Cache_inode_readdir: setting pend_cookie to cookie=%"
+               "--> setting pend_cookie to cookie=%"
 	       PRIu64,
                cookie);
   *pend_cookie = cookie;
@@ -1218,7 +1206,7 @@ cache_inode_status_t cache_inode_readdir(cache_entry_t * dir_pentry,
   (pclient->stat.func_stats.nb_call[CACHE_INODE_READDIR])++;
 
   LogFullDebug(COMPONENT_CACHE_INODE,
-               "--> Cache_inode_readdir: parameters are cookie=%"PRIu64
+               "--> parameters are cookie=%"PRIu64
 	       " nbwanted=%u",
                cookie, nbwanted);
 
@@ -1403,7 +1391,7 @@ cache_inode_status_t cache_inode_readdir(cache_entry_t * dir_pentry,
   {
       if (!dirent)
       {
-         LogCrit(COMPONENT_CACHE_INODE, "cache_inode_readdir: "
+         LogCrit(COMPONENT_CACHE_INODE,
                  "UNEXPECTED CASE: dirent is NULL whereas nbfound>0");
          V_r(&dir_pentry->lock);
          *pstatus = CACHE_INODE_INCONSISTENT_ENTRY;

@@ -18,6 +18,7 @@
 #include "fsal.h"
 #include "fsal_internal.h"
 #include "FSAL/access_check.h"
+#include "os_types.h"
 #include "fsal_convert.h"
 #include "stuff_alloc.h"
 #include <string.h>
@@ -165,16 +166,14 @@ fsal_status_t VFSFSAL_readdir(fsal_dir_t * dir_descriptor,      /* IN */
   fsal_status_t st;
   fsal_count_t max_dir_entries;
   fsal_name_t entry_name;
-  vfsfsal_dirent_t my_dp, *dp = &my_dp;
+  os_dirent_t my_dp, *dp = &my_dp;
   int bpos = 0;
-  int tmpfd = 0;
   int num_dirents = 0, skiprec = 0;;
   char buff[BUF_SIZE];
 
-  char d_type;
   struct stat buffstat;
 
-  int errsv, rc = 0;
+  int rc = 0;
 
   memset(buff, 0, BUF_SIZE);
   memset(&entry_name, 0, sizeof(fsal_name_t));
@@ -237,8 +236,7 @@ fsal_status_t VFSFSAL_readdir(fsal_dir_t * dir_descriptor,      /* IN */
 
       for(bpos = 0; bpos < rc;)
         {
-          bzero(&dp->d_name[0], sizeof(dp->d_name));	/* XXX should not be necessary */
-          vfsfsal_get_dirent(dir_offset + bpos, buff + bpos, dp);
+          os_convert_dirent(buff + bpos, dp);
  
           bpos += dp->d_reclen;
           num_dirents++;
@@ -300,13 +298,6 @@ fsal_status_t VFSFSAL_readdir(fsal_dir_t * dir_descriptor,      /* IN */
 
           ReleaseTokenFSCall();
 
-          // Note that the per-record cookie at this level is not used.
-          // Instead, a logical cookie (1, 2, 3, ...) is created at the Cache_Inode layer
-          // The thing that is important here is the end_position cookie so that this
-          // procedure can use lseek to get to the next batch to read.
-
-          //p_pdirent[*p_nb_entries].cookie.cookie = dp->d_off;
-          ((vfsfsal_cookie_t *) (&p_pdirent[*p_nb_entries].cookie))->data.seek_offset = dp->d_off;
           p_pdirent[*p_nb_entries].nextentry = NULL;
           if(*p_nb_entries)
             p_pdirent[*p_nb_entries - 1].nextentry = &(p_pdirent[*p_nb_entries]);

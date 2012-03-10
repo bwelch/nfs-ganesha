@@ -44,7 +44,7 @@
 /* case unsensitivity */
 #define STRCMP   strcasecmp
 
-void VFSFSAL_handle_sprintf(fsal_handle_t * handle, int len, char *buf);
+char * VFSFSAL_handle_sprintf(fsal_handle_t * handle, int len, char *buf);
 
 char *VFSFSAL_GetFSName()
 {
@@ -350,10 +350,10 @@ fsal_status_t VFSFSAL_DigestHandle(fsal_export_context_t * p_expcontext,     /* 
         if (isFullDebug(COMPONENT_STATE))
           {
             char buf[256];
-            VFSFSAL_handle_sprintf(p_in_fsal_handle, sizeof(buf), buf);
             LogFullDebug(COMPONENT_STATE, "DIGEST_FILEID34 digest 0x%" PRIx64 
                                           " handle_bytes %d handle %s",
-                   ino64, p_in_fsal_handle->data.vfs_handle.handle_bytes, buf);
+                   ino64, p_in_fsal_handle->data.vfs_handle.handle_bytes,
+                   VFSFSAL_handle_sprintf(p_in_fsal_handle, sizeof(buf), buf));
           }
 
       break;
@@ -507,10 +507,10 @@ fsal_status_t VFSFSAL_load_FS_specific_parameter_from_conf(config_file_t in_conf
  * \param buf (input/output):
  *        The buffer to format
  *
- * \return - void
+ * \return - pointer to the callers buffer
  */
 
-void VFSFSAL_handle_sprintf(fsal_handle_t * handle, int len, char *buf)
+char * VFSFSAL_handle_sprintf(fsal_handle_t * handle, int len, char *buf)
 {
   vfsfsal_handle_t * myhandle = (vfsfsal_handle_t *)handle;
   int i, offset, n;

@@ -51,22 +51,22 @@ struct linux_dirent {
 };
 
 
-#include "fsal_types.h"
+#include "os_types.h"
  
 #ifndef offsetof
 #define offsetof(type, field) ((off_t)(&((type *)0)->field))
 #endif
 
 void
-vfsfsal_get_dirent(size_t dir_offset, char *addr, vfsfsal_dirent_t *dp)
+os_convert_dirent(char *addr, os_dirent_t *dp)
 {
     struct linux_dirent *direntp = (struct linux_dirent *)addr;
     char type;
 
     dp->d_ino = direntp->d_ino;
-    dp->d_off = direntp->d_off;	         /* Should equal dir_offset */
     dp->d_reclen = direntp->d_reclen;
     type = addr[direntp->d_reclen - 1];
     dp->d_type = type;
-    strncpy(dp->d_name, direntp->d_name, direntp->d_reclen -2 -offsetof(struct linux_dirent, d_name));
+    strncpy(dp->d_name, direntp->d_name,
+            direntp->d_reclen -2 -offsetof(struct linux_dirent, d_name));
 }

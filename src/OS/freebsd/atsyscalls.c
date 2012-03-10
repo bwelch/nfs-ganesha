@@ -61,6 +61,30 @@
  * If the pathname given is absolute, the 'dirfd' argument is ignored.
  */
 
+#ifndef SYS_openat
+/*
+ * Allow compliation (only) on FreeBSD versions without these syscalls
+ * These numbers match the modified FreeBSD 7.2 used by Panasas
+ */
+#define SYS_faccessat   512
+#define SYS_fchmodat    513
+#define SYS_fchownat    514
+#define SYS_getfhat     515
+#define SYS_fhopenat    516
+#define SYS_fstatat     517
+#define SYS_futimesat   518
+#define SYS_linkat      519
+#define SYS_mkdirat     520
+#define SYS_mkfifoat    521
+#define SYS_mknodat     522
+#define SYS_openat      523
+#define SYS_readlinkat  524
+#define SYS_renameat    525
+#define SYS_symlinkat   526
+#define SYS_unlinkat    527
+
+#endif
+
 int openat(int dir_fd, char *file, int oflag, mode_t mode)
 {
   return syscall(SYS_openat, dir_fd, file, oflag, mode);

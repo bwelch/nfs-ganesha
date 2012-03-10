@@ -14,7 +14,7 @@
 #include "fsal.h"
 #include "fsal_internal.h"
 #include "fsal_convert.h"
-#include "fsal_mntent.h"
+#include "os_types.h"
 #include <pwd.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@ fsal_status_t VFSFSAL_BuildExportContext(fsal_export_context_t * context,   /* O
    */
 
   vfsfsal_export_context_t * p_export_context = (vfsfsal_export_context_t *) context;
-  fsal_mnt_iter_t mnt_handle;
+  os_mnt_iter_t mnt_handle;
   fsal_status_t rc;
   char *rpath;
 
@@ -75,13 +75,13 @@ fsal_status_t VFSFSAL_BuildExportContext(fsal_export_context_t * context,   /* O
     rpath = "";
 
   /* open mnt file */
-  rc = fsal_mntent_setup(&mnt_handle);
+  rc = os_mntent_setup(&mnt_handle);
   if (rc.major != ERR_FSAL_NO_ERROR)
     {
       Return(rc.major, rc.minor, INDEX_FSAL_BuildExportContext);
     }
 
-  while (fsal_mntent_next(mnt_handle, MAXPATHLEN, mntdir, type, fsname))
+  while (os_mntent_next(mnt_handle, MAXPATHLEN, mntdir, type, fsname))
     {
       /* get the longest path vfs related export that matches export path */
 
@@ -113,7 +113,7 @@ fsal_status_t VFSFSAL_BuildExportContext(fsal_export_context_t * context,   /* O
           strncpy(mntdir_final, mntdir, MAXPATHLEN);
         }
     }
-  fsal_mntent_done(mnt_handle);
+  os_mntent_done(mnt_handle);
 
   if(outlen <= 0)
     {

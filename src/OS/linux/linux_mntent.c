@@ -61,7 +61,7 @@
 
 #include "fsal.h"
 #include "../../FSAL/FSAL_VFS/fsal_internal.h"
-#include "fsal_mntent.h"
+#include "os_types.h"
 #include "fsal_convert.h"
 #include "log_macros.h"
 
@@ -74,7 +74,7 @@
 #include <mntent.h>
 
 /*
- * The opqaue type fsal_mnt_iter_t is cast to this type on Linux
+ * The opqaue type os_mnt_iter_t is cast to this type on Linux
  */
 typedef struct
 {
@@ -84,7 +84,7 @@ typedef struct
 /**
  * Initialize a handle used to read the mount table
  */
-fsal_status_t fsal_mntent_setup(fsal_mnt_iter_t *opaque_handle)
+fsal_status_t os_mntent_setup(os_mnt_iter_t *opaque_handle)
 {
   linux_mnt_iter_t *mnt_handle;
 
@@ -92,7 +92,7 @@ fsal_status_t fsal_mntent_setup(fsal_mnt_iter_t *opaque_handle)
   mnt_handle = malloc(sizeof(*mnt_handle));
   if (mnt_handle == NULL)
     {
-      LogCrit(COMPONENT_OS, "Malloc failure 1 in fsal_mntent_setup");
+      LogCrit(COMPONENT_OS, "Malloc failure 1 in os_mntent_setup");
       Return(posix2fsal_error(ENOMEM), 0, INDEX_FSAL_BuildExportContext);
     }
 
@@ -104,14 +104,15 @@ fsal_status_t fsal_mntent_setup(fsal_mnt_iter_t *opaque_handle)
                       strerror(errno));
       Return(posix2fsal_error(errno), 0, INDEX_FSAL_BuildExportContext);
     }
-  *opaque_handle = (fsal_mnt_iter_t)mnt_handle;
+  *opaque_handle = (os_mnt_iter_t)mnt_handle;
   Return(ERR_FSAL_NO_ERROR, 0, INDEX_FSAL_BuildExportContext);
 }
 
 /**
  * Return the next mount table entry
  */
-int fsal_mntent_next(fsal_mnt_iter_t opaque_handle, int len, char *mntdir, char *type, char *fsname)
+int os_mntent_next(os_mnt_iter_t opaque_handle, int len, char *mntdir,
+        char *type, char *fsname)
 {
   linux_mnt_iter_t *mnt_handle = (linux_mnt_iter_t *)opaque_handle;
   struct mntent *p_mnt;
@@ -135,7 +136,7 @@ int fsal_mntent_next(fsal_mnt_iter_t opaque_handle, int len, char *mntdir, char 
 /**
  * Clean up the mount table iterator
  */
-int fsal_mntent_done(fsal_mnt_iter_t opaque_handle)
+int os_mntent_done(os_mnt_iter_t opaque_handle)
 {
   linux_mnt_iter_t *mnt_handle = (linux_mnt_iter_t *)opaque_handle;
 

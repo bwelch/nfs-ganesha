@@ -23,31 +23,29 @@
  */
 
 /**
- * \file    free_dirent.c
+ * \file    freebsd_dirent.c
  * \author  $Author: welch $
  * \date    $Date: 2006/01/17 14:20:07 $
  * \version $Revision: 1.26 $
  * \brief   API to mask differences between dirent on different systems
  *
  * Because there is no "opendirat", we use openat and getdents.  The BSD dirent
- * doesn't have an offset field, so the API passes it in based on context from
- * our caller's iteration.  However, it isn't safe to lseek() to the offset
- * and attempt getdents on a BSD system because you won't necessarily get
- * the record you're are looking for - lseek offsets are only valid between calls
- * to getdents.
+ * doesn't have an offset field, and it isn't safe to lseek() to an
+ * offset within the block of data returned by getdents anyway on a BSD system
+ * because you won't necessarily get the record you're are looking for.
+ * lseek offsets are only valid between calls to getdents.
  */
 
 #include <dirent.h>
 #include "fsal.h"
-#include "FSAL/FSAL_VFS/fsal_types.h"
+#include "os_types.h"
 
 void
-vfsfsal_get_dirent(size_t dir_offset, char *addr, vfsfsal_dirent_t *dp)
+os_convert_dirent(char *addr, os_dirent_t *dp)
 {
     struct dirent *direntp = (struct dirent *)addr;     /* FreeBSD type */
 
     dp->d_ino = direntp->d_fileno;
-    dp->d_off = dir_offset;
     dp->d_reclen = direntp->d_reclen;
     dp->d_type = direntp->d_type;
     strncpy(dp->d_name, direntp->d_name, sizeof(dp->d_name));

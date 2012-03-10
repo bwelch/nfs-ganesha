@@ -95,11 +95,10 @@ int utimensat (int dir_fd, char *path, struct timespec *times, int flags);
  * So we copy the struct fhandle into the handle array instead of
  * overlaying the whole type like the Linux code does it.
  */
-
-#if VFS_HANDLE_LEN < 48
-#error "VFS_HANDLE_LEN must be >= 48"
-#endif
 #define PANFS_HANDLE_SIZE 40
+#if VFS_HANDLE_LEN < (PANFS_HANDLE_SIZE + 8)
+#error "VFS_HANDLE_LEN is too small"
+#endif
 #define VFS_BSD_HANDLE_INIT(_fh, _handle) \
     _fh->handle_bytes = vfs_sizeof_handle(_fh); \
     _fh->handle_type = 0; \

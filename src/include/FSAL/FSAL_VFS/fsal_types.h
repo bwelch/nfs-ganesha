@@ -172,27 +172,4 @@ typedef struct
 //#define FSAL_GET_EXP_CTX( popctx ) (fsal_export_context_t *)(( (vfsfsal_op_context_t *)popctx)->export_context)
 //#define FSAL_FILENO( p_fsal_file )  ((vfsfsal_file_t *)p_fsal_file)->fd 
 
-/*
- * Linux and FreeBSD dirent structures are slightly different.
- * There is an OS-specific datatype returned from getdents.
- * The following type is FSAL-generic, and the vfsfsal_get_dirent API
- * converts from the OS-specific type to the generic type.
- */
-typedef struct
-{
-  uint64_t d_ino;
-  uint64_t d_off;
-  uint32_t d_reclen;
-  uint32_t d_type;
-  char     d_name[256];         /* Well known dirent name size */
-} vfsfsal_dirent_t;
-
-/*
- * dir_offset is the seek pointer for this record
- * the addr is the pointer into the array of dirents returned by the syscall
- * The dp pointer is the result.
- */
-
-void vfsfsal_get_dirent(size_t dir_offset, char *addr, vfsfsal_dirent_t *dp);
-
 #endif                          /* _FSAL_TYPES__SPECIFIC_H */

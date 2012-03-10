@@ -19,7 +19,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
- * ------------- 
+ * -------------
  */
 
 /**
@@ -38,7 +38,7 @@
 
 #include "fsal.h"
 #include "../../FSAL/FSAL_VFS/fsal_internal.h"
-#include "fsal_mntent.h"
+#include "os_types.h"
 #include "fsal_convert.h"
 #include "log_macros.h"
 
@@ -52,7 +52,7 @@
 #include <sys/mount.h>
 
 /*
- * The opaque type fsal_mnt_iter_t is cast to this type on FreeBSD
+ * The opaque type os_mnt_iter_t is cast to this type on FreeBSD
  */
 
 typedef struct
@@ -73,15 +73,15 @@ typedef struct
 /**
  * Initialize a handle used to read the mount table (BSD)
  */
-fsal_status_t fsal_mntent_setup(fsal_mnt_iter_t *opaque_handle)
+fsal_status_t os_mntent_setup(os_mnt_iter_t *opaque_handle)
 {
   freebsd_mnt_iter_t *mnt_handle;
-  
+
   *opaque_handle = NULL;
   mnt_handle = malloc(sizeof(*mnt_handle));
   if (mnt_handle == NULL)
     {
-      LogCrit(COMPONENT_OS, "Malloc failure 1 in fsal_mntent_setup");
+      LogCrit(COMPONENT_OS, "Malloc failure 1 in os_mntent_setup");
       Return(posix2fsal_error(ENOMEM), 0, INDEX_FSAL_BuildExportContext);
     }
 
@@ -104,23 +104,24 @@ fsal_status_t fsal_mntent_setup(fsal_mnt_iter_t *opaque_handle)
   if (mnt_handle->buf == NULL)
     {
       free(mnt_handle);
-      LogCrit(COMPONENT_OS, "Malloc failure 2 in fsal_mntent_setup");
+      LogCrit(COMPONENT_OS, "Malloc failure 2 in os_mntent_setup");
       Return(posix2fsal_error(ENOMEM), 0, INDEX_FSAL_BuildExportContext);
     }
-  if (getfsstat(mnt_handle->buf, mnt_handle->num_fs * sizeof(struct statfs), MNT_NOWAIT) < 0) 
+  if (getfsstat(mnt_handle->buf, mnt_handle->num_fs * sizeof(struct statfs), MNT_NOWAIT) < 0)
     {
-      fsal_mntent_done((fsal_mnt_iter_t)mnt_handle);    /* free memory */
+      os_mntent_done((os_mnt_iter_t)mnt_handle);    /* free memory */
       LogCrit(COMPONENT_OS, "getfsstat failed");
       Return(posix2fsal_error(errno), 0, INDEX_FSAL_BuildExportContext);
     }
-  *opaque_handle = (fsal_mnt_iter_t)mnt_handle;
+  *opaque_handle = (os_mnt_iter_t)mnt_handle;
   Return(ERR_FSAL_NO_ERROR, 0, INDEX_FSAL_BuildExportContext);
 }
 
 /**
  * Return the next mount table entry (BSD)
  */
-int fsal_mntent_next(fsal_mnt_iter_t opaque_handle, int len, char *mntdir, char *type, char *fsname)
+int os_mntent_next(os_mnt_iter_t opaque_handle, int len, char *mntdir,
+        char *type, char *fsname)
 {
   freebsd_mnt_iter_t *mnt_handle = (freebsd_mnt_iter_t *)opaque_handle;
   struct statfs *s;
@@ -143,7 +144,7 @@ int fsal_mntent_next(fsal_mnt_iter_t opaque_handle, int len, char *mntdir, char 
 /**
  * Clean up the mount table iterator (BSD)
  */
-int fsal_mntent_done(fsal_mnt_iter_t opaque_handle)
+int os_mntent_done(os_mnt_iter_t opaque_handle)
 {
   freebsd_mnt_iter_t *mnt_handle = (freebsd_mnt_iter_t *)opaque_handle;
 
